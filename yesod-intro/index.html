@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Practical Haskell Web Apps</title>
+    <meta charset="utf-8">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body { font-family: 'Droid Serif'; }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+# Quick and Dirty Yesod
+
+.zoomed[![yesod](yesod.png "yesod")]
+
+a practical hacker's guide
+
+---
+
+# Ecosystem
+
+- Snap
+- Scotty/Spock/etc
+- Servant
+- Yesod
+
+
+---
+
+# Snap
+
+- a collection of "snappable" modules
+- not much overarching structure
+- i haven't built anything serious in it, can't be that objective.
+
+---
+
+# Scotty/Spock
+
+```
+{-# LANGUAGE OverloadedStrings #-}
+import Web.Scotty
+
+import Data.Monoid (mconcat)
+
+main = scotty 3000 $ do
+    get "/:word" $ do
+        beam <- param "word"
+        html $ mconcat ["<h1>Scotty, ", beam, " me up!</h1>"]
+```
+
+- route-first style
+- great for small apps
+- rapidly end up implementing most of what yesod provides in bigger apps.
+
+---
+
+# Servant (my forbidden love)
+
+```
+data User = ...
+type UserAPI1 = "users" :> Get '[JSON] [User]
+server1 :: Server UserAPI1
+server1 = return [...]
+
+main = run 8081 $ serve (Proxy :: Proxy UserAPI1) server1
+
+-- in client code
+
+getUsers = client (Proxy :: UserAPI1)
+-- done!
+
+```
+
+## Downsides
+- not opinionated - you choose templates, database layer, etc etc etc.
+- sometimes underbaked or missing - authentication is new & fiddly, can't do some "normal" web things like set cookies
+
+---
+
+# Yesod
+
+- means "Foundation"
+- opinionated: while you can swap pieces out, there's definitely a Yesod Way
+- feature-complete
+- mostly typesafe, but only to level of links (a given handler can render json/html/whatever any way it likes - no equivalent of api-as-a-type)
+- what i'm mostly going to talk about. Psych!
+
+# Components
+- Quasiquoted Database DSL
+- Quasiquoted Routes DSL
+- Quasiquoted Template DSLs
+- ... guess Snoyman really likes Quasiquoting.
+
+---
+
+# Quasiquoters
+
+- a way of constructing a program by running some code at compile time
+- how is this different to Template Haskell?
+- isn't really, just prettier.
+
+```
+curryN :: Int -> Q Exp
+curryN n = do
+  f  <- newName "f"
+  xs <- replicateM n (newName "x")
+  let args = map VarP (f:xs)
+      ntup = TupE (map VarE xs)
+  return $ LamE args (AppE (VarE f) ntup)
+```
+
+vs
+
+```
+[parseRoutes|
+/             HomeR     GET
+/blog         BlogR     GET POST
+/blog/#BlogId BlogPostR GET POST
+
+/static       StaticR   Static getStatic
+|]
+```
+---
+# Why go to the effort?
+
+- DB dsl gives us migrations (sorta) as well as consistency
+- dev experience is smooth: add a new field or table, the type system tells you what's on your to-do list
+- link construction is typesafe
+- so are templates!
+
+---
+# Databases
+
+Yesod uses Persistent
+- table layout DSL
+- fairly primitive query language (sub-SQL)
+- Esqueleto fills the gaps
+
+---
+# what sucks
+
+- migrations aren't reified, so can't be added to (ended up using activerecord migrations & a test step that breaks the build if there are any migration changes)
+- compile times can be slow
+
+
+---
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js">
+    </script>
+    <script>
+      var slideshow = remark.create();
+    </script>
+  </body>
+</html>
