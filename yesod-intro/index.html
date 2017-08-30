@@ -150,10 +150,18 @@ Yesod uses Persistent
 - Esqueleto fills the gaps
 
 ---
+# Important typeclasses
+
+- Aeson FromJSON/ToJSON
+- PathPiece
+
+
+---
 # what sucks
 
 - migrations aren't reified, so can't be added to (ended up using activerecord migrations & a test step that breaks the build if there are any migration changes)
 - compile times can be slow
+- dynamic subdomained sites are a bit of a hack - have to rewrite in middleware
 
 
 ---
