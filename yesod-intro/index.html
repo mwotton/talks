@@ -21,11 +21,11 @@
 
 class: center, middle
 
-# Quick and Dirty Yesod
+# Practical Haskell Web Apps
 
 .zoomed[![yesod](yesod.png "yesod")]
 
-a practical hacker's guide
+
 
 ---
 
@@ -36,6 +36,7 @@ a practical hacker's guide
 - Servant
 - Yesod
 
+Less about code, more about approach & mindset
 
 ---
 
@@ -87,6 +88,7 @@ getUsers = client (Proxy :: UserAPI1)
 ## Downsides
 - not opinionated - you choose templates, database layer, etc etc etc.
 - sometimes underbaked or missing - authentication is new & fiddly, can't do some "normal" web things like set cookies
+- backwards compatibility not a priority
 
 ---
 
